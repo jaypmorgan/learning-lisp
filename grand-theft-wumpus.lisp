@@ -52,7 +52,7 @@
 		 (push node visited)
 		 (mapc (lambda (edge) (traverse (cdr edge)))
 		       (direct-edges node edge-list)))))
-      (traverse-node))
+      (traverse node))
     visited))
 
 (defun find-islands (nodes edge-list)
@@ -62,10 +62,10 @@
 	       ;; find the connected and unconnected nodes
 	       ;; traverse the recursively traverse the unconnected nodes
 	       ;; to find more islands
-	       (let* ((connected (get-connected (car-nodes) edge-list))
+	       (let* ((connected (get-connected (car nodes) edge-list))
 		      (unconnected (set-difference nodes connected)))
 		 (push connected islands)
-		 (when unconncected
+		 (when unconnected
 		   (find-islands unconnected)))))
       (find-islands nodes))
     islands))
@@ -103,7 +103,51 @@ returning a single graph"
 	  edge-alist))
 
 (defun make-city-edges ()
+  "Create a list of nodes using a loop"
   (let* ((nodes (loop for i from 1 to *node-num* collect i))
 	 (edge-list (connect-all-islands nodes (make-edge-list)))
 	 (cops (remove-if-not (lambda (x) (zerop (random *cop-odds*))) edge-list)))
     (add-cops (edges-to-alist edge-list) cops)))
+
+(defun neighbours (node edge-alist)
+  (mapcar #'car (cdr (assoc node edge-alist))))
+
+(defun within-one (a b edge-alist)
+  (member b (neighbours a edge-alist)))
+
+(defun within-two (a b edge-alist)
+  (or (within-one a b edge-alist)
+      (some (lambda (x)
+	      (within-one x b edge-alist))
+	    (neighbours a edge-alist))))
+
+(defun make-city-nodes (edge-alist)
+  (let ((wumpus (random-node))
+	(glow-worms (loop for i below *worm-num* collect (random-node))))
+    (loop for n from 1 to *node-num*
+       collect (append (list n)
+		       (cond ((eql n wumpus) '(wumpus))
+			     ((within-two n wumpus edge-alist) '(blood!)))
+		       (cond ((member n glow-worms) '(glow-worm))
+			     ((some (lambda (worm)
+				      (within-one n worm edge-alist))
+				    glow-worms)
+			      '(lights!)))
+		       (when (some #'cdr (cdr (assoc n edge-alist)))
+			 '(sirens!))))))
+
+(defun find-empty-node ()
+  (let ((x (random-node)))
+    (if (cdr (assoc x *congestion-city-nodes*))
+	(find-empty-node)
+	x)))
+
+(defun draw-city ()
+  (ugraph->png "city" *congestion-city-nodes* *congestion-city-edges*))
+
+(defun new-game ()
+  (setf *congestion-city-edges* (make-city-edges))
+  (setf *congestion-city-nodes* (make-city-nodes *congestion-city-edges*))
+  (setf *player-pos* (find-empty-node))
+  (setf *visited-nodes* (list *player-pos*))
+  (draw-city))
