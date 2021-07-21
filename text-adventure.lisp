@@ -136,7 +136,7 @@
     (let ((item (car lst))
 	  (rest (cdr lst)))
       (cond ((eq item #\space) (cons item (tweak-text rest caps lit)))
-	    ((member item '(#\! #\? #\.)) (cons item (teak-text rest t lit)))
+	    ((member item '(#\! #\? #\.)) (cons item (tweak-text rest t lit)))
 	    ((eq item #\") (tweak-text rest caps (not lit)))
 	    (lit (cons item (tweak-text rest nil lit)))
 	    ((or caps lit) (cons (char-upcase item) (tweak-text rest nil lit)))
