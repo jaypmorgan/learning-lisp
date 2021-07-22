@@ -41,10 +41,10 @@
 (defun dot->png (fname thunk)
   (with-open-file (*standard-output* fname :direction :output :if-exists :supersede)
     (funcall thunk))
-  (ext:shell (concatenate 'string "dot -Tpng -O " fname)))
+  (uiop:run-program (concatenate 'string "dot -Tpng -O " fname)))
 
 (defun graph->png (fname nodes edges)
-  (dot->png fname (lambda () (graph->dot *nodes* *edges*))))
+  (dot->png fname (lambda () (graph->dot nodes edges))))
 
 (defun uedges->dot (edges)
   (maplist (lambda (lst)

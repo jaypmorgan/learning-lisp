@@ -1,2 +1,6 @@
 /city
 /city.png
+/known-city
+/known-city.png
+/graph-util.fasl
+/*.fasl
