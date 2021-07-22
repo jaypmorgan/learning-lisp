@@ -36,6 +36,13 @@
 	 (loop repeat *edge-num* collect
 	       (edge-pair (random-node) (random-node)))))
 
+(defun hash-edges (edge-list)
+  (let ((tab (make-hash-table)))
+    (mapc (lambda (x) (let ((node (car x)))
+			(push (cdr x) (gethash node tab))))
+	  edge-list)
+    tab))
+
 ;; the above process, due to the randomness, can create islands so we
 ;; do the following to connect these islands to the rest of the city.
 (defun direct-edges (node edge-list)
@@ -53,6 +60,15 @@
 		 (push node visited)
 		 (mapc (lambda (edge) (traverse (cdr edge)))
 		       (direct-edges node edge-list)))))
+      (traverse node))
+    visited))
+
+(defun get-connected-hash (node edge-tab)
+  (let ((visited (make-hash-table)))
+    (labels ((traverse (node)
+	       (unless (gethash node visited)
+		 (setf (gethash node visited) t)
+		 (mapc (lambda (edge) (traverse edge)) (gethash node edge-tab)))))
       (traverse node))
     visited))
 
