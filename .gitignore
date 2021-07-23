@@ -4,3 +4,5 @@
 /known-city.png
 /graph-util.fasl
 /*.fasl
+*.png
+/land-of-lisp/city
