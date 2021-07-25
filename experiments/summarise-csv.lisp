@@ -41,18 +41,64 @@
 							  (cdr contents)))))
 	    (loop for i below ncols collect i))))
 
-(defparameter *data* (read-csv "data.csv"))
+(defstruct (data-table
+	    (:constructor make-data-table (data
+					   &aux
+					     (nrows (length (cdar data)))
+					     (ncols (length data)))))
+  data
+  (nrows 0 :type integer)
+  (ncols 0 :type integer))
 
-(defmacro select (col data)
-  `(cdr (assoc ',col ,data)))
+(defmethod select ((data data-table) (col symbol))
+  "Select a column"
+  (assoc col (data-table-data data)))
 
-(defun nrows (data)
-  (length (cdar data)))
+(defmethod select ((data data-table) (cols list))
+  "Select multiple columns"
+  (map 'list (lambda (key) (select data key)) cols))
 
-(defun ncols (data)
-  (length data))
+(defmethod rename-col ((data data-table) (org symbol) (new symbol))
+  "Rename a column `org' with the column `new'"
+  (setf (car (select data org)) new))
 
-(select id *data*)
+(defmethod rename-col ((data data-table) (org list) (new list))
+  "Rename multiple columns"
+  (mapc (lambda (o n) (rename-col data o n)) org new))
 
-(nrows *data*)
-(ncols *data*)
+(defmethod as-array ((data data-table))
+  (let ((rows (data-table-nrows data))
+	(cols (data-table-ncols data))
+	(data (data-table-data data)))
+    (make-array (list cols rows) :initial-contents (map 'list #'cdr data))))
+
+(defmethod mutate ((data data-table) (col symbol) (fn function))
+  (setf (cdr (select data col)) (map 'simple-vector fn (cdr (select data col)))))
+
+(defmethod summarise ((data data-table) (col symbol) (fn function))
+  (funcall fn (cdr (select data col))))
+
+(defparameter *data* (make-data-table (read-csv "data.csv")))
+
+(select *data* 'id)
+(select *data* '(id name))
+
+(data-table-nrows *data*)
+(data-table-ncols *data*)
+
+(rename-col *data* 'id 'newid)
+(rename-col *data* 'name 'newname)
+(data-table-data *data*)
+
+(rename-col *data* '(newname newid) '(name id))
+(data-table-data *data*)
+
+(as-array *data*)
+
+(mutate *data* 'age #'parse-integer)
+(data-table-data *data*)
+
+(defun mean (data)
+  (/ (reduce #'+ data) (length data)))
+
+(summarise *data* 'age #'mean)
