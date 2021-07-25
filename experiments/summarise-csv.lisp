@@ -58,13 +58,26 @@
   "Select multiple columns"
   (map 'list (lambda (key) (select data key)) cols))
 
+(defmethod names ((data data-table))
+  (mapcar #'car (data-table-data data)))
+
 (defmethod rename-col ((data data-table) (org symbol) (new symbol))
   "Rename a column `org' with the column `new'"
-  (setf (car (select data org)) new))
+  (make-data-table
+   (map 'list (lambda (lst)
+		(if (eq org (car lst))
+		    (cons new (cdr lst))
+		    lst))
+	(data-table-data data))))
 
 (defmethod rename-col ((data data-table) (org list) (new list))
-  "Rename multiple columns"
-  (mapc (lambda (o n) (rename-col data o n)) org new))
+  "Rename multiple columns and return new dataset"
+  (cond ((= (length org) 0) data)
+	(t (make-data-table
+	    (data-table-data
+	     (rename-col
+	      (rename-col data (cdr org) (cdr new))
+	      (car org) (car new)))))))
 
 (defmethod as-array ((data data-table))
   (let ((rows (data-table-nrows data))
@@ -73,10 +86,14 @@
     (make-array (list cols rows) :initial-contents (map 'list #'cdr data))))
 
 (defmethod mutate ((data data-table) (col symbol) (fn function))
-  (setf (cdr (select data col)) (map 'simple-vector fn (cdr (select data col)))))
+  (let ((newdata (cons (cons col (map 'simple-vector fn (cdr (select data col))))
+		       (data-table-data data))))
+    (make-data-table
+     (mapcar (lambda (key) (assoc key newdata)) (names data)))))
 
-(defmethod summarise ((data data-table) (col symbol) (fn function))
-  (funcall fn (cdr (select data col))))
+(defmethod summarise ((data data-table) (newcol symbol) (oldcol symbol) (fn function))
+  (make-data-table
+   (cons (cons newcol (cons (funcall fn (cdr (select data oldcol))) nil)) nil)))
 
 (defparameter *data* (make-data-table (read-csv "data.csv")))
 
@@ -86,19 +103,18 @@
 (data-table-nrows *data*)
 (data-table-ncols *data*)
 
-(rename-col *data* 'id 'newid)
-(rename-col *data* 'name 'newname)
-(data-table-data *data*)
+(names *data*)
 
-(rename-col *data* '(newname newid) '(name id))
+(rename-col *data* 'id 'newid)
+(rename-col *data* '(id name) '(newid newname))
 (data-table-data *data*)
 
 (as-array *data*)
 
-(mutate *data* 'age #'parse-integer)
+(setf *data* (mutate *data* 'age #'parse-integer))
 (data-table-data *data*)
 
 (defun mean (data)
   (/ (reduce #'+ data) (length data)))
 
-(summarise *data* 'age #'mean)
+(summarise *data* 'mean-age 'age #'mean)
