@@ -102,6 +102,15 @@ the summary. `fn' is the function applied to the data."
   (make-data-table
    (cons (cons newcol (cons (funcall fn (cdr (select data oldcol))) nil)) nil)))
 
+(defmethod print-table ((data data-table))
+  (let* ((h (names data))
+	 (ncols (data-table-ncols data))
+	 (cols (coerce (loop for i below ncols
+			     collect (format nil "~d" (* i 5)))
+		       'string)))
+    (princ cols)))
+
+
 (defparameter *data* (make-data-table (read-csv "data.csv")))
 
 
