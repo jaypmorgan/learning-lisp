@@ -1,5 +1,3 @@
-(defparameter *test-line* "john,dear,42,65,\"West cross, streat\"")
-
 (defun find-delimiter (token string)
   "Find the indexes where the token occurs in a string"
   (let ((indexes nil)
@@ -59,6 +57,7 @@
   (map 'list (lambda (key) (select data key)) cols))
 
 (defmethod names ((data data-table))
+  "List the column names"
   (mapcar #'car (data-table-data data)))
 
 (defmethod rename-col ((data data-table) (org symbol) (new symbol))
@@ -80,22 +79,33 @@
 	      (car org) (car new)))))))
 
 (defmethod as-array ((data data-table))
+  "Return an array representation of the data-table"
   (let ((rows (data-table-nrows data))
 	(cols (data-table-ncols data))
 	(data (data-table-data data)))
     (make-array (list cols rows) :initial-contents (map 'list #'cdr data))))
 
 (defmethod mutate ((data data-table) (col symbol) (fn function))
+  "Mutate a column returning a new data-table"
   (let ((newdata (cons (cons col (map 'simple-vector fn (cdr (select data col))))
 		       (data-table-data data))))
     (make-data-table
      (mapcar (lambda (key) (assoc key newdata)) (names data)))))
 
-(defmethod summarise ((data data-table) (newcol symbol) (oldcol symbol) (fn function))
+(defmethod summarise ((data data-table)
+		      (newcol symbol)
+		      (oldcol symbol)
+		      (fn function))
+  "Create a summary table of the data. `newcol' specifies the name of
+the summary colums, while `oldcol' is the data that is used to create
+the summary. `fn' is the function applied to the data."
   (make-data-table
    (cons (cons newcol (cons (funcall fn (cdr (select data oldcol))) nil)) nil)))
 
 (defparameter *data* (make-data-table (read-csv "data.csv")))
+
+
+;; Testing some of the functions
 
 (select *data* 'id)
 (select *data* '(id name))
