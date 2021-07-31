@@ -11,11 +11,18 @@
 ;; inputs
 
 (defun my-four-cons (a b c d)
+  "Version using only cons"
   (cons
-   (my-cons a b)
-   (cons (my-cons c d) nil)))
+   (cons a (cons b nil))
+   (cons (cons c (cons d nil)) nil)))
+
+(defun my-four-cons-2 (a b c d)
+  "Version using the previously made function"
+  (my-cons (my-cons a b) (my-cons c d)))
 
 (my-four-cons 1 2 3 4)
+
+(my-four-cons-2 1 2 3 4)
 
 ;; 2.22 Suppose we wanted to make a function called DUO-CONS that
 ;; added two elements to the front of a list. DUO-CONS would be a
