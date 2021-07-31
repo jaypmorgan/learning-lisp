@@ -59,3 +59,23 @@
 
 (loop repeat 10
       do (format t "~5t~a ~15t~a ~25t~a~%" (random-animal) (random-animal) (random-animal)))
+
+(loop repeat 10 do (format t "~30<~a~;~a~;~a~>~%" (random-animal) (random-animal) (random-animal)))
+
+;; iterating through lists
+;; 
+;; format can loop through data using ~{ and ~} control
+;; sequences. Anything between these control sequences are the body of
+;; the loop and will be printed for every item in the list.
+
+(defparameter *animals*
+  (loop repeat 10 collect (random-animal)))
+
+(format t "~{I see a ~a! ~}" *animals*)
+
+;; a single iteration construct can also retrieve more than one item
+(format t "~{I see a ~a... or was it a ~a?~%~}" *animals*)
+
+;; pretty print a table
+(format t "|~{~<|~%|~,33:;~2d ~>~}|" (loop for x below 100 collect x))
+
