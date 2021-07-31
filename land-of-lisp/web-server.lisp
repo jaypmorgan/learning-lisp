@@ -57,7 +57,7 @@ bar: abc, 123"))
 (defun socket-server (port)
   (let ((socket (make-instance 'sb-bsd-sockets:inet-socket :type :stream :protocol :tcp)))
     (when socket
-      (sb-bsd-sockets:socket-bind socket '(127 0 0 1) port)§
+      (sb-bsd-sockets:socket-bind socket '(127 0 0 1) port)
       (sb-bsd-sockets:socket-listen socket 1)
       socket)))
 
