@@ -23,4 +23,30 @@
   (let ((indexes (shuffle (seq (length lst)))))
     (take n indexes)))
 
+(defun find-elements (item lst)
+  (loop for i below (length lst)
+	when (equal (nth i lst) item)
+	  collect i))
 
+(find-elements 2 '(1 1 1 2 2 2 3 3))
+
+(defun stratified-sample (pcnt lst)
+  "Stratify sample from a list of labels"
+  (let* ((classes (remove-duplicates lst))
+	 (proportions (mapcar (lambda (cls)
+				(/ (length (remove-if-not (lambda (c)
+							    (equal c cls))
+							  lst))
+				   (length lst)))
+			      classes))
+	 (class-indexes (mapcar (lambda (cls)
+				  (find-elements cls lst))
+				classes)))
+    (mapcar (lambda (indexes prop)
+	      (sample-without-replacement indexes (max 1 (round (* (* pcnt prop) (length lst))))))
+	    class-indexes
+	    proportions)))
+
+(defparameter *targets* '(0 1 0 0 0 1 1 1 1 1))
+
+(stratified-sample 0.10 *targets*)
