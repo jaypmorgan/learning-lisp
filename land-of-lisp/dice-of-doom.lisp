@@ -14,7 +14,7 @@
 
 (defparameter *num-players* 2)
 (defparameter *max-dice* 3)
-(defparameter *board-size* 2)
+(defparameter *board-size* 3)
 (defparameter *board-hexnum* (* *board-size* *board-size*))
 
 (defun board-array (lst)
@@ -135,3 +135,68 @@
     (if (> (length w) 1)
 	(format t "The game is a tie between ~a" (mapcar #'player-letter w))
 	(format t "The winner is ~a" (player-letter (car w))))))
+
+(defun rate-position (tree player)
+  (let ((moves (caddr tree)))
+    (if moves (apply (if (eq (car tree) player)
+			 #'max
+			 #'min)
+		     (get-ratings tree player))
+	(let ((w (winners (cadr tree))))
+	  (if (member player w)
+	      (/ 1 (length w))
+	      0)))))
+
+(defun get-ratings (tree player)
+  (mapcar (lambda (move (rate-position (cadr move) player)) (caddr tree))))
+
+(defun handle-computer (tree)
+  (let ((ratings (get-ratings tree (car tree))))
+    (cadr (nth (position (apply #'max ratings) ratings) (caddr tree)))))
+
+(defun play-vs-computer (tree)
+  (print-info tree)
+  (cond ((null (caddr tree))
+	 (announce-winner (cadr tree)))
+	((zerop (car tree)) (play-vs-computer (handle-human tree)))
+	(t (play-vs-computer (handle-computer tree)))))
+
+;; memorisation using closures
+
+(let ((old-neighbours (symbol-function 'neighbours))
+      (previous (make-hash-table)))
+  (defun neighbours (pos)
+    (or (gethash pos previous)
+	(setf (gethash pos previous) (funcall old-neighbours pos)))))
+
+(let ((old-game-tree (symbol-function 'game-tree))
+      (previous (make-hash-table :test #'equalp)))
+  (defun game-tree (&rest rest)
+    (or (gethash rest previous)
+	(setf (gethash rest previous) (apply old-game-tree rest)))))
+
+(let ((old-rate-position (symbol-function 'rate-position))
+      (previous (mash-has-table)))
+  (defun rate-position (tree player)
+    (let ((tab (gethash player previous)))
+      (unless tab
+	(setf tab (setf (gethash player previous) (make-hash-table))))
+      (or (gethash tree tab)
+	  (setf (gethash tree tab) (funcall old-rate-position tree player))))))
+
+
+;; tail-call optimisation
+
+(defun add-new-dice (board player spare-dice)
+  (labels ((f (lst n acc)
+	     (cond ((zerop n) (append (reverse acc) lst))
+		   ((null lst) (reverse acc))
+		   (t (let ((cur-player (caar lst))
+			    (cur-dice (cadar lst)))
+			(if (and (eq cur-player player)
+				 (< cur-dice *max-dice*))
+			    (f (cdr lst) (1- n)
+			       (cons (list cur-player (1+ cur-dice)) acc))
+			    (f (cdr lst) n
+			       (cons (car lst) acc))))))))
+    (board-array (f (coerce board 'list) spare-dice ()))))
