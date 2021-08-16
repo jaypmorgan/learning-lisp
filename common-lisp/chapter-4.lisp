@@ -229,4 +229,98 @@
 (and (equal 'abc 'abc) 'yes) ;; => YES
 (or (equal 'abc 'abc) 'yes) ;; => T
 
+;; 4.15 Write a predicate called GEQ that returns T if its first input
+;; is great than or equal to its second input
+
+(defun geq (a b)
+  (>= a b))
+
+(geq 1 2) ;; => nil
+(geq 2 1) ;; => T
+
+(defun geq (a b)
+  (cond ((or (> a b) (= a b)) t)
+	(t nil)))
+
+(geq 1 2) ;; => nil
+(geq 2 1) ;; => T
+
+;; 4.16 Write a function that squares a number if it is odd and
+;; positive, doubles it if its odd and negative, and otherwise divides
+;; the number by 2
+
+(defun weird-result (n)
+  (cond ((and (oddp n) (plusp n)) (* n n))
+	((and (oddp n) (minusp n)) (* 2 n))
+	(t (/ n 2))))
+
+(weird-result 2) ;; => 1
+(weird-result 3) ;; => 9
+(weird-result -3) ;; => -6
+
+;; 4.17 Write a predicate that returns T if the first input is either
+;; BOY or GIRL and the second input is child, or the first input is
+;; either MAN or WOMAN and the second input is ADULT.
+
+(defun my-pred (gender age)
+  (cond ((and (or (eq gender 'boy) (eq gender 'girl)) (eq age 'child)) t)
+	((and (or (eq gender 'man) (eq gender 'woman)) (eq age 'adult)) t)
+	(t nil)))
+
+(my-pred 'boy 'child) ;; => T
+(my-pred 'girl 'child) ;; => T
+(my-pred 'dog 'adult) ;; => NIL
+(my-pred 'woman 'adult) ;; => T
+
+;; 4.18 Write a function to act as referee in the Rock-Scissors-Paper
+;; game. In this game, each player picks one of Rock, Scissors, or
+;; Paper, and then both players tell what they picked. Rock "breaks"
+;; Scissors, so if the first player picks Rock and the second picks
+;; Scissors, the first player wins. Scissors "cuts" Paper, and Paper
+;; "covers" Rock. If both players pick the same thing, it's a tie. The
+;; function PLAY should take two inputs, each of which is either ROCK,
+;; SCISSORS, or PAPER, and return one of the symbols FIRST-WINS,
+;; SECOND-WINS, or TIE. Examples (PLAY 'ROCK 'SCISSORS) should return
+;; FIRST-WINS.
+
+(defun play (fp sp)
+  (labels ((first-wins (fp sp)
+	     (if (or (and (eq 'rock fp) (eq 'scissor sp))
+	             (and (eq 'scissors fp) (eq 'paper sp))
+		     (and (eq 'paper fp) (eq 'rock sp)))
+		 t)))
+    (cond ((first-wins fp sp) 'first-wins)
+	  ((first-wins sp fp) 'second-wins)
+	  (t 'tie))))
+
+(play 'rock 'paper) ;; => SECOND-WINS
+(play 'paper 'rock) ;; => FIRST-WINS
+(play 'rock 'rock) ;; => TIE
+
+;; 4.19 Show how to write the expression (AND X Y Z W) using COND
+;; instead of AND. Then show how to write it using nested IFs instead
+;; of AND.
+
+;; (cond ((not x) nil)
+;;       ((not y) nil)
+;;       ((not z) nil)
+;;       ((not z) nil)
+;;       (t t))
+
+;; (if x
+;;     (if y
+;; 	   (if z
+;; 	       (if w
+;; 		   t))))
+
+;; 4.20 Write a version of the COMPARE function using IF instead of
+;; COND. Also write a version using AND and OR.
+
+(defun compare (x y)
+  (if (equal x y)
+      'numbers-are-the-same
+      (if (< x y)
+	  'first-is-smaller
+	  'first-is-bigger)))
+
 
