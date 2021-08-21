@@ -323,4 +323,62 @@
 	  'first-is-smaller
 	  'first-is-bigger)))
 
+(compare 1 2) ;; => FIRST-IS-SMALLER
+(compare 2 1) ;; => FIRST-IS-BIGGER
+(compare 2 2) ;; => NUMBERS-ARE-THE-SAME
 
+(defun compare (x y)
+  (or (and (equal x y) 'numbers-are-the-same)
+      (and (< x y) 'first-is-smaller)
+      'first-is-bigger))
+
+(compare 1 2) ;; => FIRST-IS-SMALLER
+(compare 2 1) ;; => FIRST-IS-BIGGER
+(compare 2 2) ;; => NUMBERS-ARE-THE-SAME
+
+;; 4.21 Write versions of GTEST function using IF and COND.
+
+;; GTEST for reference
+
+(defun gtest (x y)
+  (or (> x y)
+      (zerop x)
+      (zerop y)))
+
+(defun gtest (x y)
+  (if (> x y)
+      t
+      (if (zerop x)
+	  t
+	  (if (zerop y)
+	      t))))
+
+(defun gtest (x y)
+  (cond ((> x y) t)
+	((zerop x) t)
+	((zerop y) t)
+	(t nil)))
+
+;; 4.22 Use COND to write a predicate BOILINGP that takes two inputs,
+;; TEMP and SCALE, and returns T if the temperature is above the
+;; boiling point of water on the specified scale. If the scale is
+;; FAHRENHEIGHT, the boiling point is 212 degrees; if CELSIUS, the
+;; boiling point is 100 degrees. Also write versions using IF and
+;; AND/OR instead of COND.
+
+(defun boilingp (temp scale)
+  (cond ((and (eq scale 'fahrenheight) (> temp 212)) t)
+	((and (eq scale 'celsius) (> temp 100)) t)
+	(t nil)))
+
+(defun boilingp (temp scale)
+  (if (eq scale 'fahrenheight)
+      (if (> temp 212)
+	  t)
+      (if (eq scale 'celsius)
+	  (if (> temp 100)
+	      t))))
+
+(defun boilingp (temp scale)
+  (or (and (eq scale 'fahrenheight) (> temp 212) t)
+      (and (eq scale 'celsius) (> temp 100) t)))
