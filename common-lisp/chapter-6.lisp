@@ -313,3 +313,129 @@
 (assoc 'B table-transform)
 (assoc 'C table-transform)
 (assoc 'D table-transform)
+
+;; Keyboard exercise
+
+(defparameter rooms
+  '((living-room
+     (north front-stairs)
+     (south dining-room)
+     (east kitchen))
+    (front-stairs
+     (north upstairs-bedroom)
+     (south living-room))
+    (upstairs-bedroom
+     (west library)
+     (south front-stairs))
+    (library
+     (south back-stairs)
+     (east upstairs-bedroom))
+    (back-stairs
+     (north library)
+     (south downstairs-bedroom))
+    (downstairs-bedroom
+     (north back-stairs)
+     (east dining-room))
+    (dining-room
+     (north living-room)
+     (east pantry))
+    (pantry
+     (west dining-room)
+     (north kitchen))
+    (kitchen
+     (south pantry)
+     (west living-room))))
+
+;; 6.41
+;;
+;; a. Write a function CHOICES that takes the name of a room as input
+;; and returns the table of permissible directions Robbie may take
+;; from that room. For example, (CHOICES 'PANTRY) should return the
+;; list ((NORTH KITCHEN) (WEST DINING-ROOM)). Test your function to
+;; make sure it returns the correct result.
+
+(defun choices (room)
+  (cdr (assoc room rooms)))
+
+(choices 'pantry)
+(choices 'upstairs-bedroom)
+
+;; b. Write a function LOOK that takes two inputs, a direction and a
+;; room, and tells where Robbie would end up if he moved in that
+;; direction from that room. For example, (LOOK 'NORTH 'PANTRY) should
+;; return KITCHEN. (LOOK 'WEST 'PANTRY) should return
+;; DINING-ROOM. (LOOK 'SOUTH 'PANTRY) should return NIL. Hint: The
+;; CHOICES function will be a useful building block.
+
+(defun look (direction room)
+  (cadr (assoc direction (choices room))))
+
+(look 'north 'pantry)
+
+;; c. We will use the global variable LOC to hold Robbies's
+;; location. Type in an expression to set his location to the
+;; pantry. The following function should be used whenever you want to
+;; change his location.
+
+(defparameter loc 'pantry)
+
+(defun set-robbie-location (place)
+  "Moves Robbie to PLACE by setting the variable LOC"
+  (setf loc place))
+
+;; d. Write a function HOW-MANY-CHOICES that tells how many choices
+;; Robbie has for where to move to next. Your function should refer to
+;; the global variable LOC to find his current location. If he is in
+;; the pantry, (HOW-MANY-CHOICES) should return 2.
+
+(defun how-many-choices ()
+  (length (choices loc)))
+
+(how-many-choices)
+
+;; e. Write a predicate UPSTAIRSP that returns T if its input is an
+;; upstairs location. (The library and the upstairs bedroom are the
+;; only two locations upstairs). Write a predicate ONSTAIRSP that
+;; returns T if its input is either FRONT-STAIRS or BACK-STAIRS.
+
+(defun upstairsp (room)
+  (or (eq room 'library)
+      (eq room 'bedroom)))
+
+(defun onstairsp (room)
+  (or (eq room 'front-stairs)
+      (eq room 'back-stairs)))
+
+;; f. Where's Robbie? Write a function of no inputs called WHERE that
+;; tells where Robbie is. If he is in the library, (WHERE) should say
+;; (ROBBIE IS UPSTAIRS IN THE LIBRARY). If he is in the kitchen, it
+;; should say (ROBBIE IS DOWNSTAIRS IN THE KITCHEN). If he is on the
+;; front stairs, it should say (ROBBIE IS ON THE FRONT-STAIRS).
+
+(defun where ()
+  (let ((pos (cond ((upstairsp loc) '(upstairs in the))
+		   ((onstairsp loc) '(on the))
+		   (t '(downstairs in the)))))
+    `(robbie is ,@pos ,loc)))
+
+(where)
+(set-robbie-location 'library)
+(where)
+(set-robbie-location 'front-stairs)
+(where)
+(set-robbie-location 'pantry)
+
+;; g. Write a function MOVE that takes one input, a direction, and
+;; moves Robbie in that direction. MOVE should make use of the LOOK
+;; function you wrote previously, and should call SET-ROBBIE-LOCATION
+;; to move him. If Robbie can't move in the specified direction an
+;; appropriate message should be returned. For example, if Robbie is
+;; in the pantry, (MOVE 'SOUTH) should return something like (OUCH!
+;; ROBBIE HIT A WALL). (MOVE 'NORTH) should change Robbie's location
+;; and return (ROBBIE IS DOWNSTAIRS IN THE KITCHEN).
+
+(defun move (direction)
+  (let ((possible-movement (look direction loc)))
+    (if possible-movement
+	(set-robbie-location possible-movement)
+	'(OUCH! ROBBIE HIT A WALL))))
